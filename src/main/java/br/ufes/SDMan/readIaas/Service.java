@@ -7,7 +7,15 @@ public class Service {
 	private String nome;
 	private Map<String, Integer> dadoAvaliado;
 	private int nagiosMonitor;
-	private String uuid;
+	private String uuid;	
+	private boolean active;
+
+	public boolean isActive() {
+		return active;
+	}
+	public void setActive(boolean active) {
+		this.active = active;
+	}
 	
 	//getters and setters
 	public int getNagiosMonitor() {

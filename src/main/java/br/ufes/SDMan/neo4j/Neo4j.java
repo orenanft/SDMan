@@ -5,10 +5,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.neo4j.*;
+import org.neo4j.driver.v1.*;
+import static org.neo4j.driver.v1.Values.parameters;
 
 import br.ufes.SDMan.readIaas.DescobreOpenstack;
 import br.ufes.SDMan.readIaas.Node;
+import br.ufes.SDMan.readIaas.NodeDao;
+import br.ufes.SDMan.readIaas.Server;
+import br.ufes.SDMan.readIaas.ServerDao;
 import br.ufes.SDMan.readIaas.Service;
 
 /*
@@ -29,6 +33,31 @@ public class Neo4j {
 	criaBanco();
 	}
 
+    private void connectNeo4j(){
+    	Driver driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "sdman" ) );
+    	Session session = driver.session();
+    	
+    	/*
+    	 * session.run( "CREATE (a:Person {name: {name}, title: {title}})",
+        parameters( "name", "Arthur", "title", "King" ) );
+
+StatementResult result = session.run( "MATCH (a:Person) WHERE a.name = {name} " +
+                                      "RETURN a.name AS name, a.title AS title",
+        parameters( "name", "Arthur" ) );
+while ( result.hasNext() )
+{
+    Record record = result.next();
+    System.out.println( record.get( "title" ).asString() + " " + record.get( "name" ).asString() );
+}
+    	 * */
+    	    	
+    }
+    
+    private void closeConnection(Driver driver, Session session){
+    	session.close();
+    	driver.close();
+    }
+    
     //funcao responsavel por criar o banco
 	private void criaBanco() {
         System.out.println ("\t");
@@ -38,11 +67,11 @@ public class Neo4j {
     //Service Stats
     insere("create(n:ServiceStats)");
 	
-	ArrayList<Node> servidor = DescobreOpenstack.getServidores();
-    ArrayList<br.ufes.SDMan.readIaas.Node> virtuals = DescobreOpenstack.getNos(); 
-
+	ServerDao servidor = DescobreOpenstack.getServidores();
+	NodeDao virtuals = DescobreOpenstack.getNos(); 
+	Server server = servidor.getServer();
         //create physical server
-    for (br.ufes.SDMan.readIaas.Node server : servidor ){
+    if (server != null){
     	
     	//Criação do Nó de Computação (server)
         insere("CREATE (a:Compute{Name:'"+server.getHostname()+
@@ -50,7 +79,7 @@ public class Neo4j {
 		"',Layer:"+server.getCamada()+
         	",uuid:'"+server.getUuid()+"'})");
 
-        for (br.ufes.SDMan.readIaas.Node virtual : virtuals ){
+        for (Node virtual : virtuals.getAllNodes() ){
         	if(virtual.getHost().equalsIgnoreCase(server.getHostname())){
         	//Criação das Instâncias (virtual)	
         	insere("CREATE (a:Instance{Name:'"+virtual.getHostname()+
@@ -59,13 +88,14 @@ public class Neo4j {
         		   "',Layer:"+virtual.getCamada()+",uuid:'"+virtual.getUuid()+
         		   "',Project:'"+virtual.getProjeto()+
         		   "',Tenant:'"+virtual.getLocatario()+
-        		   "',Router:'"+virtual.getRoteador()+"'})");
+        		   "',Router:'"+virtual.getRoteador()+
+        		   "',Active:'"+virtual.isActive()+"'})");
 	        //create relationship
 	       	insere("MATCH (a:Compute),(b:Instance) WHERE a.uuid='"+server.getUuid()+
 	       			"' AND b.uuid='"+virtual.getUuid()+"' CREATE (a)-[r:Hosts]->(b)");
 
 	        //getting services
-	       	for (Service service :  virtual.getServices()){
+	       	for (Service service :  virtual.getServices().getAllServices()){
 	       		insere("CREATE (a:Service{Name:'"+service.getName()+
 	       	       		"',uuid:'"+service.getUuid()+"'})");
 	        	//create relationship

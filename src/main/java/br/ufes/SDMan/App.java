@@ -11,7 +11,16 @@ public class App
 {
 	
 	public static void main(String[] args) throws Exception {
-	System.out.println("Selecione a IaaS...");
+		Nmap4j nmap4j = new Nmap4j( "localhost" ) ;
+		ArrayList<String> getOutput = new ArrayList<String>();
+		if( !nmap4j.hasError() ) {
+			getOutput = nmap4j.getResult();
+		}
+    	for(String var: getOutput){
+    		System.out.println(var);
+    	}
+	}
+	/*System.out.println("Selecione a IaaS...");
 	System.out.println("No momento, somente OPENSTACK é suportado");
 	new DescobreOpenstack();
 	Neo4j.neo4jServidor("start");
@@ -43,5 +52,5 @@ public class App
 	            System.out.println("Obrigado por utilizar a aplicação");
 	            System.out.println("Saindo...");}
 	    }));
-}
+}*/
 }

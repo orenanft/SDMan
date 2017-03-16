@@ -1,15 +1,12 @@
 package br.ufes.SDMan.readIaas;
 
-import java.util.ArrayList;
-
 public class Node{
 	private String hostname;
 	private String host;
-	//public String descricao;
 	private String ip;
 	private String iface;
 	private String mac;
-	private ArrayList<Service> services;
+	private ServiceDao services;
 	private int camada;
 	private int nagiosMonitor;
 	private String uuid;
@@ -17,8 +14,17 @@ public class Node{
 	private String locatario;
 	private String roteador;
 	private String image;
-	
+	private boolean active;
 	//getters and setters
+	
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
+
 	public String getImage() {
 		return image;
 	}
@@ -52,14 +58,6 @@ public class Node{
 		this.host = host;
 	}
 	
-	/*public String getDescricao() {
-		return descricao;
-	}
-	
-	public void setDescricao(String descricao) {
-		this.descricao = descricao;
-	}*/
-	
 	public String getIp() {
 		return ip;
 	}
@@ -84,11 +82,11 @@ public class Node{
 		this.mac = mac;
 	}
 	
-	public ArrayList<Service> getServices() {
+	public ServiceDao getServices() {
 		return services;
 	}
 	
-	public void setServices(ArrayList<Service> services) {
+	public void setServices(ServiceDao services) {
 		this.services = services;
 	}
 	
