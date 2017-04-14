@@ -15,28 +15,30 @@ import br.ufes.SDMan.readIaas.Server;
 import br.ufes.SDMan.readIaas.ServerDao;
 import br.ufes.SDMan.readIaas.Service;
 
-/*
- *POSSÍVEIS MELHORIAS PARA A CLASSE: FAZER FUNÇÃO PARA MOLDAR A CONSULTA 
- *E CHAMAR SOEMNTE A FUNÇÃO INSERE PARA EXECUTAR
- */
-
 public class Neo4j {
 
-	// START SNIPPET: createReltype
-    /*private enum RelTypes implements RelationshipType {
-        Hospeda, Possui;
-    }*/
+	private static final String createComputeNode = "CREATE (a:ComputeNode {Name: {name}, IP: {ip}, Layer:{layer}, UUID:{uuid}, Active:{active}})";
+	private static final String createInstance = "CREATE (a:Instance {Name: {name}, IP: {ip}, MAC: {mac}, Interface:{iface}, Layer:{layer}, Project:{project}, Tenant:{tenant}, Router:{router}, UUID:{uuid}, Active:{active}})";
 
     public Neo4j() {
 		// TODO Auto-generated constructor stub
     	System.out.println ("Writing in NEO4J...");
-	criaBanco();
+    	criaBanco();
 	}
 
-    private void connectNeo4j(){
+    private void runQueriesNeo4j(Object object){
     	Driver driver = GraphDatabase.driver( "bolt://localhost:7687", AuthTokens.basic( "neo4j", "sdman" ) );
     	Session session = driver.session();
     	
+    	if(object instanceof Server){
+    		session.run( createComputeNode,
+    	    		parameters("name",((Server) object).getHostname(), "ip",((Server) object).getIp(), "layer",((Server) object).getCamada(), "uuid",((Server) object).getUuid(), "active",((Server) object).isActive() ));
+    	}else if(object instanceof Node){
+    		session.run( createInstance ,
+        	        parameters("name",((Node) object).getHostname(), "ip",((Node) object).getIp(), "mac",((Node) object).getMac(), "layer",((Node) object).getCamada(), "project",((Node) object).getProjeto(), "tenant",((Node) object).getLocatario(), "router",((Node) object).getRoteador(), "uuid",((Node) object).getUuid(), "active",((Node) object).isActive() ));
+    	}else if (object instanceof Service){
+    		
+    	}
     	/*
     	 * session.run( "CREATE (a:Person {name: {name}, title: {title}})",
         parameters( "name", "Arthur", "title", "King" ) );
@@ -51,9 +53,6 @@ while ( result.hasNext() )
 }
     	 * */
     	    	
-    }
-    
-    private void closeConnection(Driver driver, Session session){
     	session.close();
     	driver.close();
     }
@@ -73,15 +72,14 @@ while ( result.hasNext() )
         //create physical server
     if (server != null){
     	
-    	//Criação do Nó de Computação (server)
-        insere("CREATE (a:Compute{Name:'"+server.getHostname()+
-        	"',IP:'"+server.getIp()+
-		"',Layer:"+server.getCamada()+
-        	",uuid:'"+server.getUuid()+"'})");
+    	runQueriesNeo4j(server);
 
         for (Node virtual : virtuals.getAllNodes() ){
         	if(virtual.getHost().equalsIgnoreCase(server.getHostname())){
         	//Criação das Instâncias (virtual)	
+        		
+
+
         	insere("CREATE (a:Instance{Name:'"+virtual.getHostname()+
         	           "',IP:'"+virtual.getIp()+"',MAC:'"+virtual.getMac()+
         	           "',Interface:'"+virtual.getIface()+
